@@ -24,6 +24,9 @@ importers:
         specifier: ^3.5.32
         version: 3.5.33(typescript@6.0.3)
     devDependencies:
+      '@types/geojson':
+        specifier: ^7946.0.16
+        version: 7946.0.16
       '@types/node':
         specifier: ^24.12.2
         version: 24.12.2
