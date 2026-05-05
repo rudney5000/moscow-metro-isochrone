@@ -11,13 +11,11 @@ export const useMapStore = defineStore('map', {
 
         intervals: [15, 30, 60],
         isochrones: null as IsochroneFeature | null,
-        isochronesLoadingL: false
+        isochronesLoading: false
     }),
 
     getters: {
         enabledLineSet: (state) => new Set(state.enabledLines),
-
-        selectedStation: (state) => state.stations.find(s => s.id === state.selectedStationId)
     },
     actions: {
         setStations(stations: Station[]) {
@@ -26,6 +24,13 @@ export const useMapStore = defineStore('map', {
         selectStation(station: Station | null) {
             this.selectedStation = station ? { ...station } : null;
             this.isochrones = null
+        },
+        setIsochrones(iso: IsochroneFeature | null) {
+            this.isochrones = iso;
+            this.isochronesLoading = false
+        },
+        setIsochronesLoading(loading: boolean){
+            this.isochronesLoading = loading
         }
     }
 })

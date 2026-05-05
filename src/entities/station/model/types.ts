@@ -8,11 +8,8 @@ export interface Position {
 export interface Station {
     id: string
     name: string
-    nameRu: string
-    lineId: LineId[]
+    nameLocal: string
     position: Position
-    transferIds: string[]
-    isCrossPlatform?: boolean
 }
 
 export interface MetroLine {
@@ -20,6 +17,14 @@ export interface MetroLine {
     name: string
     color: string
     type: LineType
+    stations: string[]
+}
+
+export interface Edge {
+    from: string
+    to: string
+    time: number
+    type: "ride" | "transfer"
 }
 
 export interface IsochroneFeature {
@@ -34,3 +39,12 @@ export type LineId =
     | "12" | "13" | "14" | "15"
 
 export type LineType = "radial" | "circle" | "transfer"
+
+export type RankingRow = {
+    rank?: number;
+    id: string;
+    nameLocal: string;
+    area15: number;
+    area30: number;
+    area60: number;
+};
