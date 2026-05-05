@@ -1,0 +1,27 @@
+graphhopper:
+  datareader.file: /data/central-fed-district-260504.osm.pbf
+  gtfs.file: /gtfs/moscow-metro.gtfs.zip
+  graph.location: /graphhopper/cache
+
+  profiles:
+    - name: foot
+      custom_model_files:
+        - foot.json
+
+  import.osm.ignored_highways: motorway,trunk
+  graph.encoded_values: foot_access, foot_average_speed, foot_priority, hike_rating, mtb_rating, country, road_class
+
+  routing.non_ch.max_visited_nodes: 1000000
+  prepare.min_network_size: 200
+
+server:
+  application_connectors:
+    - type: http
+      port: 8989
+      bind_host: 0.0.0.0
+  admin_connectors:
+    - type: http
+      port: 8990
+      bind_host: 0.0.0.0
+  request_log:
+    appenders: []

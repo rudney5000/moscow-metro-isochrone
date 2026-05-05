@@ -1,0 +1,28 @@
+#services:
+#  graphhopper:
+#    image: israelhikingmap/graphhopper:7.0
+#    environment:
+#      - JAVA_OPTS=-Xmx4g -Xms4g
+#    ports:
+#      - "8989:8989"
+#    volumes:
+#      - ./data:/data
+#      - ./gtfs:/gtfs
+#      - ./cache:/graphhopper/cache
+#      - ./config.yml:/config.yml
+#    command: --config /config.yml
+
+services:
+  graphhopper:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8989:8989"
+      - "8990:8990"
+    volumes:
+      - ./data:/data
+      - ./gtfs:/gtfs
+      - ./cache:/graphhopper/cache
+      - ./config.yml:/config.yml
+    command: ["server", "/config.yml"]
