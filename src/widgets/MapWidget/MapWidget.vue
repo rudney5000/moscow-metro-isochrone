@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import maplibregl from "maplibre-gl";
-import {onBeforeMount, onMounted, ref} from "vue";
+import {onBeforeUnmount, onMounted, ref, watch} from "vue";
 import {useMapStore} from "@/entities/station/model/store.ts";
+import {MAP_CONFIG} from "@/shared/config/map.ts";
+import { loadIsochrone } from "@/shared/api/isochrone/isochroneLoader.ts";
 
-// role global de ce component
+// global role of component
 
 /** il fait 5 chose principales
  * 1. initialize map(MapLibre)
@@ -19,27 +21,89 @@ const mapContainer = ref<HTMLDivElement | null>(null)
 const mapRef = ref<maplibregl.Map | null>(null)
 const markerRef = ref<maplibregl.Marker | null>(null)
 
-const MOSCOW_CENTER: [number, number] = [37.6173, 55.7558]
-const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_KEY
 const store = useMapStore()
 
 // init map(MapLibre)
 onMounted(() => {
-  if(!mapContainer.value) return
+  if(mapRef.value) return
+  if (!mapContainer.value) return
 
   mapRef.value = new maplibregl.Map({
     container: mapContainer.value,
-    style: `https://api.maptiler.com/maps/dataviz/style.json?key=${MAPTILER_KEY}`,
-    center: MOSCOW_CENTER,
-    zoom: 12.5
+    style: MAP_CONFIG.style,
+    center: MAP_CONFIG.center,
+    zoom: MAP_CONFIG.zoom,
+    pitch: 0,
+    bearing: 0
   });
+
+  mapRef.value.on('load', () => {
+    mapRef.value?.setProjection({ type: 'mercator' })
+  })
 
   mapRef.value.addControl(new maplibregl.NavigationControl());
 });
 
-onBeforeMount(() => {
+onBeforeUnmount(() => {
   mapRef.value?.remove();
+  mapRef.value = null
 })
+
+// 2. WATCH SELECTED STATION → LOAD ISOCHRONE
+watch(
+    () => store.selectedStation,
+    async (station) => {
+      if(!station) {
+        store.setIsochrones(null)
+        return
+      }
+
+      let stale = false
+      store.setIsochronesLoading(true)
+
+      const attempt = async (retries: number): Promise<void> => {
+        const data = await loadIsochrone(station.id);
+        if(stale) return;
+
+        if(data) {
+          store.setIsochrones(data)
+        } else if(retries > 0) {
+          await new Promise(r => setTimeout(r, 500))
+          if(!stale) await attempt(retries - 1)
+        } else {
+          store.setIsochrones(null)
+        }
+      }
+
+      await attempt(2)
+
+      return () => {
+        stale = true
+      }}
+
+    //   if(mapRef.value.getSource("iso")) {
+    //     mapRef.value.removeLayer("iso-layer");
+    //     mapRef.value.removeSource("iso");
+    //   }
+    //
+    //   const geojson = await loadIsochrone(station.id);
+    //
+    //   mapRef.value.addSource("iso", {
+    //     type: "geojson",
+    //     data: geojson
+    //   })
+    //
+    //   mapRef.value.addLayer({
+    //     id: "iso-layer",
+    //     type: "fill",
+    //     source: "iso",
+    //     paint: {
+    //       "fill-color": "#3b82f6",
+    //       "fill-opacity": 0.3
+    //     }
+    //   })
+    // }
+    )
 
 </script>
 
