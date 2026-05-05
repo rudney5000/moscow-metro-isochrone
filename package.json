@@ -9,6 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@turf/turf": "^7.3.5",
+    "adm-zip": "^0.5.17",
     "fuse.js": "^7.3.0",
     "maplibre-gl": "^5.24.0",
     "pinia": "^3.0.4",
@@ -16,6 +18,7 @@
     "vue": "^3.5.32"
   },
   "devDependencies": {
+    "@types/adm-zip": "^0.5.8",
     "@types/geojson": "^7946.0.16",
     "@types/node": "^24.12.2",
     "@vitejs/plugin-vue": "^6.0.6",
