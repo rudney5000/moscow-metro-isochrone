@@ -18,3 +18,17 @@ export const LINE_COLORS = {
     "17": "#27303F",
     "18": "#AC1753",
 };
+
+export const ISOCHRONE_INTERVALS = [60, 30, 15] as const
+
+export const ISOCHRONE_COLORS = [
+    'rgba(59, 130, 246, 0.15)',
+    'rgba(59, 130, 246, 0.25)',
+    'rgba(59, 130, 246, 0.45)',
+]
+
+export const ISOCHRONE_STROKES = [
+    'rgba(59, 130, 246, 0.3)',
+    'rgba(59, 130, 246, 0.5)',
+    'rgba(59, 130, 246, 0.8)',
+]
