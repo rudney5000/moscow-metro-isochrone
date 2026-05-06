@@ -29,12 +29,12 @@
  * Output: public/data/isochrones/*.geojson
  */
 
-import { readFileSync } from "fs";
+import {mkdirSync, readFileSync, writeFileSync} from "fs";
 import AdmZip from "adm-zip";
 import { join } from "path";
 import { execSync } from "child_process";
 import { union, simplify, featureCollection, feature as turfFeature } from "@turf/turf";
-import type {IsochroneFeature, Station} from "@/entities/station/model/types.ts";
+import type {IsochroneFeature, Station} from "../src/entities/station/model/types.ts";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type GeoFeature = { type: "Feature"; properties: Record<string, any>; geometry: { type: string; coordinates: unknown } };
@@ -43,7 +43,7 @@ const GH_URL = process.env.GH_URL || "http://localhost:8989";
 const ROOT = join(import.meta.dirname, "..");
 const STATIONS_PATH = join(ROOT, "public", "data", "stations.geojson");
 const GTFS_ZIP = join(ROOT, "docker", "gtfs", "seoul-metro.gtfs.zip");
-// const OUT_DIR = join(ROOT, "public", "data", "isochrones");
+const OUT_DIR = join(ROOT, "public", "data", "isochrones");
 
 const INTERVALS = [15, 30, 60]; // minutes
 const INTERVAL_SECONDS = INTERVALS.map((m) => m * 60);
@@ -307,7 +307,7 @@ export async function processStation(
     // 1st: primary snapped coordinate
     let features = await computeIsochrone(lat, lon, departures, id);
     if (features) {
-        // writeFileSync(join(outDir, `${id}.geojson`), JSON.stringify({ type: "FeatureCollection", features }));
+        writeFileSync(join(OUT_DIR, `${id}.geojson`), JSON.stringify({ type: "FeatureCollection", features }));
         return {
             status: "ok",
             retryNote: "",
@@ -320,7 +320,7 @@ export async function processStation(
         if (stop.lat === lat && stop.lon === lon) continue;
         features = await computeIsochrone(stop.lat, stop.lon, departures, id);
         if (features) {
-            // writeFileSync(join(outDir, `${id}.geojson`), JSON.stringify({ type: "FeatureCollection", features }));
+            writeFileSync(join(OUT_DIR, `${id}.geojson`), JSON.stringify({ type: "FeatureCollection", features }));
             return {
                 status: "ok",
                 retryNote: " (retry: alt stop)",
@@ -333,7 +333,7 @@ export async function processStation(
     for (const [dlat, dlon] of COORD_NUDGES) {
         features = await computeIsochrone(lat + dlat, lon + dlon, departures, id);
         if (features) {
-            // writeFileSync(join(outDir, `${id}.geojson`), JSON.stringify({ type: "FeatureCollection", features }));
+            writeFileSync(join(OUT_DIR, `${id}.geojson`), JSON.stringify({ type: "FeatureCollection", features }));
             return {
                 status: "ok",
                 retryNote: " (retry: nudge)",
@@ -377,7 +377,7 @@ async function main() {
         }
     })
 
-    // mkdirSync(OUT_DIR, { recursive: true });
+    mkdirSync(OUT_DIR, { recursive: true });
     console.log(
         `\nComputing isochrones for ${stations.length} stations (off-peak 14:00)...\n`
     );
@@ -413,7 +413,7 @@ async function main() {
                         ? allFirstDepartures(nearbyStops, TARGET_TIME, depIndex)
                         : [TARGET_TIME];
                 const departures = depTimes.map(
-                    (t) => `${DATE_PREFIX}${t}+09:00`
+                    (t) => `${DATE_PREFIX}${t}+03:00`
                 );
                 const depNote =
                     depTimes.length > 1 ? ` ${depTimes.length}dirs` : "";

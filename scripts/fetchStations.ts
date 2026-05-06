@@ -119,7 +119,7 @@ async function main() {
                         : [TARGET_TIME];
 
                 const departures = depTimes.map(
-                    (t) => `${DATE_PREFIX}${t}+09:00`
+                    (t) => `${DATE_PREFIX}${t}+03:00`
                 );
 
                 const depNote =

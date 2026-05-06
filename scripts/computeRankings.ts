@@ -4,8 +4,8 @@
 import fs from "fs";
 import path from "path";
 import { area } from "@turf/turf";
-import { stationsRaw } from "@/shared/data/stations.ts";
-import type {RankingRow, Station} from "@/entities/station/model/types.ts";
+import { stationsRaw } from "../src/shared/data/stations.ts";
+import type {RankingRow, Station} from "../src/entities/station/model/types.ts";
 
 const ISOCHRONES_DIR = path.resolve("public/data/isochrones");
 const OUT_FILE = path.resolve("public/data/rankings.json");
