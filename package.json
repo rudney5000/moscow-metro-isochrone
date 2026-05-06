@@ -6,7 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "generate-stations": "npx tsx scripts/generateStationsGeoJSON.ts",
+    "compute-isochrones": "npx tsx scripts/computeIsochrones.ts",
+    "compute-rankings": "npx tsx scripts/computeRankings.ts",
+    "generate-lines": "npx tsx scripts/generateLinesGeoJSON.ts"
   },
   "dependencies": {
     "@turf/turf": "^7.3.5",
