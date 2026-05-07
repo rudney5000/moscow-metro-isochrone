@@ -22,13 +22,12 @@ export const LINE_COLORS = {
 export const ISOCHRONE_INTERVALS = [60, 30, 15] as const
 
 export const ISOCHRONE_COLORS = [
-    'rgba(59, 130, 246, 0.15)',
-    'rgba(59, 130, 246, 0.25)',
-    'rgba(59, 130, 246, 0.45)',
+    'rgba(34, 197, 94, 0.25)',
+    'rgba(234, 179, 8, 0.25)',
+    'rgba(239, 68, 68, 0.25)',
 ]
-
 export const ISOCHRONE_STROKES = [
-    'rgba(59, 130, 246, 0.3)',
-    'rgba(59, 130, 246, 0.5)',
-    'rgba(59, 130, 246, 0.8)',
+    'rgba(34, 197, 94, 0.7)',
+    'rgba(234, 179, 8, 0.7)',
+    'rgba(239, 68, 68, 0.7)',
 ]
