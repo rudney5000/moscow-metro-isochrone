@@ -1,7 +1,8 @@
 import {defineStore} from "pinia";
-import { stationsRaw as staticStations} from '@/shared/data/stations.ts'
-import { lines as staticLines} from '@/shared/data/lines.ts'
-import type {IsochroneFeature, LineId, MetroLine, Station} from "@/entities/station/model/types.ts";
+import {stationsRaw as staticStations} from '@/shared/data/stations.ts'
+import {lines as staticLines} from '@/shared/data/lines.ts'
+import type { LineId, MetroLine, Station} from "@/entities/station/model/types.ts";
+import type {GeoJSON} from "geojson";
 
 export const useMapStore = defineStore('map', {
     state: () => ({
@@ -12,7 +13,7 @@ export const useMapStore = defineStore('map', {
         enabledLines: [] as LineId[],
 
         intervals: [15, 30, 60],
-        isochrones: null as IsochroneFeature | null,
+        isochrones: null as GeoJSON.FeatureCollection | null,
         isochronesLoading: false,
 
         sidebarOpen: true,
@@ -55,7 +56,7 @@ export const useMapStore = defineStore('map', {
           }
         },
 
-        setIsochrones(iso: IsochroneFeature | null) {
+        setIsochrones(iso: GeoJSON.FeatureCollection| null) {
             this.isochrones = iso;
             this.isochronesLoading = false
         },

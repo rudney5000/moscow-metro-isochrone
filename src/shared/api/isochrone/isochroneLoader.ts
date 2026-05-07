@@ -1,6 +1,6 @@
-import type {IsochroneFeature} from "@/entities/station/model/types.ts";
+import type {GeoJSON} from "geojson";
 
-const cache = new Map<string, IsochroneFeature>()
+const cache = new Map<string, GeoJSON.FeatureCollection>()
 const MAX_CACHE = 50
 
 function evictOldest(){
@@ -10,7 +10,7 @@ function evictOldest(){
     }
 }
 
-export async function loadIsochrone(stationId: string): Promise<IsochroneFeature | null>{
+export async function loadIsochrone(stationId: string): Promise<GeoJSON.FeatureCollection | null>{
     if(cache.has(stationId)) {
         return cache.get(stationId)!
     }
@@ -19,7 +19,7 @@ export async function loadIsochrone(stationId: string): Promise<IsochroneFeature
         const url = `${import.meta.env.BASE_URL}data/isochrones/${stationId}.geojson`;
         const res = await fetch(url);
         if(!res.ok) return null
-        const data: IsochroneFeature = await res.json()
+        const data: GeoJSON.FeatureCollection = await res.json()
         evictOldest()
         cache.set(stationId, data)
         return data
