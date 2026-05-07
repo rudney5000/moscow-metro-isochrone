@@ -9,25 +9,12 @@ import type {LineId} from "@/entities/station/model/types.ts";
 import {lines} from "@/shared/data/lines.ts";
 import {getStationLineBadges} from "@/shared/utils/stationUtils.ts";
 
-// global role of component
-
-/** il fait 5 chose principales
- * 1. initialize map(MapLibre)
- * 2. Show:
- *  . subway lines
- *  . stations
- * 3.Handles station selection
- * 4. Loads and displays travel time isochrones
- * 5. Sync everything with your store
- */
-
 const store = useMapStore()
 const mapContainer = ref<HTMLDivElement | null>(null)
 const mapRef = shallowRef<maplibregl.Map | null>(null)
 const markerRef = shallowRef<maplibregl.Marker | null>(null)
 const EMPTY_FC: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: []}
 const LINE_COLORS = Object.fromEntries(lines.map(l => [l.id, l.color])) as Record<LineId, string>
-const LINE_NAMES  = Object.fromEntries(lines.map(l => [l.id, l.name]))  as Record<LineId, string>
 
 function drawPill(
     ctx: CanvasRenderingContext2D,
@@ -172,7 +159,7 @@ function applySelectedLabel(map: maplibregl.Map) {
 
 async function setupLayers(map: maplibregl.Map) {
 
-  // 1. CLEANUP — layers puis sources
+  // 1. CLEANUP — layers
   const layerIds = [
     ...ISOCHRONE_INTERVALS.flatMap((_, i) => [`isochrone-fill-${i}`, `isochrone-line-${i}`]),
     'subway-lines-casing', 'subway-lines-inner',
@@ -183,7 +170,7 @@ async function setupLayers(map: maplibregl.Map) {
     if (map.getSource(id)) map.removeSource(id)
   })
 
-  // 2. ISOCHRONE SOURCE + LAYERS (vides au départ)
+  // 2. ISOCHRONE SOURCE + LAYERS
   map.addSource('isochrones', { type: 'geojson', data: EMPTY_FC })
 
   ;[...ISOCHRONE_INTERVALS].forEach((interval, i) => {
@@ -206,7 +193,7 @@ async function setupLayers(map: maplibregl.Map) {
     })
   })
 
-  // 3. SUBWAY LINES depuis lines.geojson
+  // 3. SUBWAY LINES lines.geojson
   try {
     const res = await fetch(`${import.meta.env.BASE_URL}data/lines.geojson`)
     if (res.ok) {
@@ -376,7 +363,7 @@ async function setupLayers(map: maplibregl.Map) {
     })
   })
 
-  // 7. APPLIQUER L'ÉTAT COURANT DU STORE
+  // 7. APPLY STATE OF STORE
   applyIsochroneData(map)
   applyIntervalVisibility(map)
   applyDimming(map)

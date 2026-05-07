@@ -40,7 +40,6 @@ function selectRow(id: string) {
 
 <template>
   <div :class="['stats-panel', store.statsPanelOpen ? 'open' : 'closed']">
-    <!-- Masthead -->
     <div class="stats-masthead">
       <div class="stats-masthead-inner">
         <h2 class="stats-title">Data</h2>
@@ -49,7 +48,6 @@ function selectRow(id: string) {
       <div class="stats-subtitle">Accessibility Analysis</div>
     </div>
 
-    <!-- Table 1 — Accessibility Ranking -->
     <div class="stats-section">
       <h3>Table 1 — Accessibility Ranking</h3>
 

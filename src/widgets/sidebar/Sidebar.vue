@@ -2,7 +2,6 @@
 import { ref, computed, watch, nextTick } from 'vue'
 import Fuse from 'fuse.js'
 import { useMapStore } from '@/entities/station/model/store.ts'
-// import { stationsRaw } from '@/shared/data/stations.ts'
 import { lines } from '@/shared/data/lines.ts'
 import type { LineId, Station } from '@/entities/station/model/types'
 import {getStationLineBadges} from "@/shared/utils/stationUtils.ts";
@@ -103,14 +102,12 @@ const lineIds = computed(() => lines.map((l) => l.id as LineId))</script>
   </button>
 
   <div :class="['sidebar', sidebarOpen ? 'open' : 'closed']">
-    <!-- Masthead -->
     <div class="sidebar-masthead" @click="store.toggleSidebar">
       <h1 class="sidebar-title">Москва<br />Изохроны</h1>
       <div class="sidebar-subtitle">Московское метро</div>
       <div class="sidebar-meta">Вне пик · Будни · 14:00 МСК</div>
     </div>
 
-    <!-- Search -->
     <div class="search-section">
       <input
           ref="inputRef"
@@ -157,7 +154,6 @@ const lineIds = computed(() => lines.map((l) => l.id as LineId))</script>
       </ul>
     </div>
 
-    <!-- Selected station -->
     <div v-if="selectedStation" class="selected-station">
       <div class="selected-header">
         <h2>{{ selectedStation.nameLocal }}</h2>
@@ -179,7 +175,6 @@ const lineIds = computed(() => lines.map((l) => l.id as LineId))</script>
       <div v-if="isochronesLoading" class="loading" role="status" aria-live="polite">Loading…</div>
     </div>
 
-    <!-- Travel Time Intervals -->
     <div class="section">
       <h3>Travel Time</h3>
       <div class="interval-pills">
@@ -201,7 +196,6 @@ const lineIds = computed(() => lines.map((l) => l.id as LineId))</script>
       <div class="section-note">Subway + walking time from station</div>
     </div>
 
-    <!-- Line Filter -->
     <div class="section">
       <h3>Lines</h3>
       <div class="line-filters">
@@ -213,7 +207,6 @@ const lineIds = computed(() => lines.map((l) => l.id as LineId))</script>
       </div>
     </div>
 
-    <!-- About -->
     <div class="about-section">
       <button class="about-toggle" :aria-expanded="aboutOpen" @click="aboutOpen = !aboutOpen">
         <span>About this project</span>
@@ -241,7 +234,6 @@ const lineIds = computed(() => lines.map((l) => l.id as LineId))</script>
       </a>
     </p>
 
-    <!-- Data panel toggle -->
     <button
         :class="['data-panel-btn', { active: statsPanelOpen }]"
         @click="store.toggleStatsPanel"
@@ -252,7 +244,6 @@ const lineIds = computed(() => lines.map((l) => l.id as LineId))</script>
 </template>
 
 <style lang="scss" scoped>
-/* ── Sidebar ── */
 .sidebar {
   position: fixed;
   left: 0;
@@ -328,7 +319,6 @@ const lineIds = computed(() => lines.map((l) => l.id as LineId))</script>
   margin-top: 2px;
 }
 
-/* ── Search ── */
 .search-section {
   position: relative;
   margin-top: 20px;
@@ -405,7 +395,6 @@ const lineIds = computed(() => lines.map((l) => l.id as LineId))</script>
   margin-top: 2px;
 }
 
-/* ── Line badge ── */
 .line-badge {
   display: inline-block;
   padding: 1px 6px;
@@ -415,7 +404,6 @@ const lineIds = computed(() => lines.map((l) => l.id as LineId))</script>
   color: #fff;
 }
 
-/* ── Selected station ── */
 .selected-station {
   background: var(--bg-section);
   border: 1px solid var(--border);
@@ -482,7 +470,6 @@ const lineIds = computed(() => lines.map((l) => l.id as LineId))</script>
   letter-spacing: 0.3px;
 }
 
-/* ── Sections ── */
 .section {
   display: flex;
   flex-direction: column;
@@ -515,7 +502,6 @@ const lineIds = computed(() => lines.map((l) => l.id as LineId))</script>
   letter-spacing: 0.2px;
 }
 
-/* ── Interval pills ── */
 .interval-pills {
   display: flex;
   gap: 0;
@@ -558,7 +544,6 @@ const lineIds = computed(() => lines.map((l) => l.id as LineId))</script>
   }
 }
 
-/* ── Line filter ── */
 .line-filters {
   display: flex;
   flex-direction: column;
@@ -595,7 +580,6 @@ const lineIds = computed(() => lines.map((l) => l.id as LineId))</script>
   flex-shrink: 0;
 }
 
-/* ── About ── */
 .about-section {
   margin-top: 22px;
 }
@@ -658,7 +642,6 @@ const lineIds = computed(() => lines.map((l) => l.id as LineId))</script>
   }
 }
 
-/* ── Data panel button ── */
 .data-panel-btn {
   margin-top: 16px;
   width: 100%;
