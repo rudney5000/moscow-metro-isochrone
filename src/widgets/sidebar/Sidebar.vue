@@ -5,6 +5,7 @@ import { useMapStore } from '@/entities/station/model/store.ts'
 // import { stationsRaw } from '@/shared/data/stations.ts'
 import { lines } from '@/shared/data/lines.ts'
 import type { LineId, Station } from '@/entities/station/model/types'
+import {getStationLineBadges} from "@/shared/utils/stationUtils.ts";
 
 // Derived lookup maps from the lines data
 const LINE_COLORS = Object.fromEntries(lines.map((l) => [l.id, l.color])) as Record<LineId, string>
@@ -145,13 +146,13 @@ const lineIds = computed(() => lines.map((l) => l.id as LineId))</script>
           <span class="result-name">{{ s.nameLocal }}</span>
           <span v-if="s.name !== s.nameLocal" class="result-en">{{ s.name }}</span>
           <span class="result-lines">
-            <span
-                v-for="l in s.lines"
-                :key="l"
-                class="line-badge"
-                :style="{ backgroundColor: LINE_COLORS[l] }"
-            >{{ LINE_NAMES[l] }}</span>
-          </span>
+          <span
+              v-for="badge in getStationLineBadges(s.id)"
+              :key="badge.id"
+              class="line-badge"
+              :style="{ backgroundColor: badge.color }"
+          >{{ badge.name }}</span>
+        </span>
         </li>
       </ul>
     </div>
@@ -169,11 +170,11 @@ const lineIds = computed(() => lines.map((l) => l.id as LineId))</script>
       </div>
       <div class="selected-lines">
         <span
-            v-for="l in selectedStation.lines"
-            :key="l"
+            v-for="badge in getStationLineBadges(selectedStation.id)"
+            :key="badge.id"
             class="line-badge"
-            :style="{ backgroundColor: LINE_COLORS[l] }"
-        >{{ LINE_NAMES[l] }}</span>
+            :style="{ backgroundColor: badge.color }"
+        >{{ badge.name }}</span>
       </div>
       <div v-if="isochronesLoading" class="loading" role="status" aria-live="polite">Loading…</div>
     </div>
@@ -220,7 +221,7 @@ const lineIds = computed(() => lines.map((l) => l.id as LineId))</script>
       </button>
       <div v-if="aboutOpen" class="about-body">
         <p>
-          Isochrone maps showing travel reach from any Seoul Metro station
+          Isochrone maps showing travel reach from any Moscow Metro station
           by subway and walking. Select a station to see how far you can
           get in 15, 30, or 60 minutes.
         </p>
@@ -229,13 +230,13 @@ const lineIds = computed(() => lines.map((l) => l.id as LineId))</script>
           OpenStreetMap data. All times reflect off-peak conditions
           (weekday, 14:00 KST).
         </p>
-        <p class="about-sources">Data: Seoul Metro GTFS · OpenStreetMap · MapTiler</p>
+        <p class="about-sources">Data: Moscow Metro GTFS · OpenStreetMap · MapTiler</p>
       </div>
     </div>
 
     <p class="about-credit">
-      Matas Speičys · {{ new Date().getFullYear() }} ·
-      <a href="https://github.com/matassp/seoul-isochrone" target="_blank" rel="noopener noreferrer">
+      Dedy Rudney · {{ new Date().getFullYear() }} ·
+      <a href="https://github.com/rudney5000/moscow-metro-isochrone" target="_blank" rel="noopener noreferrer">
         GitHub
       </a>
     </p>
