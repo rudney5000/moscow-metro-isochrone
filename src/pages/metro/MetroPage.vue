@@ -62,6 +62,12 @@ watch(
   </div>
 </template>
 
-<style scoped>
-
+<style scoped lang="scss">
+.app {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  position: relative;
+}
 </style>
