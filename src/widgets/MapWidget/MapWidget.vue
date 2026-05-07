@@ -4,8 +4,10 @@ import {onBeforeUnmount, onMounted, ref, shallowRef, watch} from "vue";
 import {useMapStore} from "@/entities/station/model/store.ts";
 import {MAP_CONFIG} from "@/shared/config/map.ts";
 import { loadIsochrone } from "@/shared/api/isochrone/isochroneLoader.ts";
-import {ISOCHRONE_COLORS, ISOCHRONE_INTERVALS, ISOCHRONE_STROKES, LINE_COLORS} from "@/shared/const/consts.ts";
+import {ISOCHRONE_COLORS, ISOCHRONE_INTERVALS, ISOCHRONE_STROKES} from "@/shared/const/consts.ts";
 import type {LineId} from "@/entities/station/model/types.ts";
+import {lines} from "@/shared/data/lines.ts";
+import {getStationLineBadges} from "@/shared/utils/stationUtils.ts";
 
 // global role of component
 
@@ -24,6 +26,8 @@ const mapContainer = ref<HTMLDivElement | null>(null)
 const mapRef = shallowRef<maplibregl.Map | null>(null)
 const markerRef = shallowRef<maplibregl.Marker | null>(null)
 const EMPTY_FC: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: []}
+const LINE_COLORS = Object.fromEntries(lines.map(l => [l.id, l.color])) as Record<LineId, string>
+const LINE_NAMES  = Object.fromEntries(lines.map(l => [l.id, l.name]))  as Record<LineId, string>
 
 function drawPill(
     ctx: CanvasRenderingContext2D,
@@ -137,10 +141,7 @@ function applyIsochroneData(map: maplibregl.Map) {
   const src = map.getSource('isochrones') as maplibregl.GeoJSONSource | undefined
   if (!src) return
   const iso = store.isochrones
-  src.setData(iso
-      ? iso.geojson
-      : EMPTY_FC
-  )
+  src.setData(iso ?? EMPTY_FC)
 }
 
 function applyIntervalVisibility(map: maplibregl.Map) {
@@ -158,6 +159,7 @@ function applyDimming(map: maplibregl.Map) {
   if (map.getLayer('subway-lines-inner')) map.setPaintProperty('subway-lines-inner', 'line-opacity', hasIso ? 0.3 : 1)
   if (map.getLayer('subway-lines-casing')) map.setPaintProperty('subway-lines-casing', 'line-opacity', hasIso ? 0.2 : 0.7)
 }
+
 function applySelectedLabel(map: maplibregl.Map) {
   const src = map.getSource('selected-station-label') as maplibregl.GeoJSONSource | undefined
   if (!src) return
@@ -245,7 +247,7 @@ async function setupLayers(map: maplibregl.Map) {
     console.warn('Could not load subway line geometries')
   }
 
-  // 4. STATION ICONS — images canvas par combinaison de lignes
+  // 4. STATION ICONS
   const stationLines = new Map<string, string[]>()
   for (const line of store.lines) {
     for (const stationId of line.stations) {
@@ -255,10 +257,11 @@ async function setupLayers(map: maplibregl.Map) {
   }
 
   const uniqueCombos = new Set(
-      store.stations.map(s => {
-        const ls = stationLines.get(s.id) ?? []
-        return [...ls].sort().join(',')
-      })
+      store.stations
+        .map(s => {
+          const ls = stationLines.get(s.id) ?? []
+          return [...ls].sort().join(',')
+        })
   )
 
   uniqueCombos.forEach(combo => {
@@ -272,21 +275,22 @@ async function setupLayers(map: maplibregl.Map) {
     type: 'geojson',
     data: {
       type: 'FeatureCollection',
-      features: store.stations.map(s => {
-        const ls = stationLines.get(s.id) ?? []
-        const sorted = [...ls].sort().join(',')
-        return {
-          type: 'Feature' as const,
-          geometry: { type: 'Point' as const, coordinates: [s.position.lng, s.position.lat] },
-          properties: {
-            id: s.id,
-            name: s.name,
-            nameLocal: s.nameLocal,
-            lines: ls.join(','),
-            linesSorted: sorted,
-          },
-        }
-      }),
+      features: store.stations
+        .map(s => {
+          const ls = stationLines.get(s.id) ?? []
+          const sorted = [...ls].sort().join(',')
+          return {
+            type: 'Feature' as const,
+            geometry: { type: 'Point' as const, coordinates: [s.position.lng, s.position.lat] },
+            properties: {
+              id: s.id,
+              name: s.name,
+              nameLocal: s.nameLocal,
+              lines: ls.join(','),
+              linesSorted: sorted,
+            },
+          }
+        }),
     },
   })
 
@@ -382,7 +386,7 @@ async function setupLayers(map: maplibregl.Map) {
 // Init map(MapLibre)
 
 onMounted(() => {
-  if (!mapContainer.value) return
+  if (!mapContainer.value || mapRef.value) return
   const map = new maplibregl.Map({
     container: mapContainer.value,
     style: MAP_CONFIG.style,
@@ -422,6 +426,8 @@ watch(() => store.selectedStation, async (station) => {
 
   if (!station) {
     store.setIsochrones(null)
+    applyIsochroneData(map)
+    applyDimming(map)
     return
   }
 
@@ -437,16 +443,21 @@ watch(() => store.selectedStation, async (station) => {
   // Load isochrone
   let stale = false
   store.setIsochronesLoading(true)
+
   const attempt = async (retries: number): Promise<void> => {
     const data = await loadIsochrone(station.id)
     if (stale) return
     if (data) {
       store.setIsochrones(data)
+      applyIsochroneData(map)
+      applyDimming(map)
     } else if (retries > 0) {
       await new Promise(r => setTimeout(r, 500))
       if (!stale) await attempt(retries - 1)
     } else {
       store.setIsochrones(null)
+      applyIsochroneData(map)
+      applyDimming(map)
     }
   }
   await attempt(2)
@@ -457,7 +468,9 @@ watch(() => store.selectedStation, async (station) => {
 // 3. WATCH ISOCHRONE → UPDATE MAP
 // ─────────────────────────────────────────────
 watch(() => store.isochrones, () => {
-  if (mapRef.value) applyIsochroneData(mapRef.value)
+  if (!mapRef.value) return
+  applyIsochroneData(mapRef.value)
+  applyDimming(mapRef.value)
 })
 
 watch(() => store.intervals, () => {
@@ -481,12 +494,23 @@ watch(() => store.enabledLines, () => {
   }
 })
 
-// ─────────────────────────────────────────────
-// 4. WATCH SELECTED STATION → MARKER
-// ─────────────────────────────────────────────
-watch(() => store.isochrones, () => {
-  if (mapRef.value) applyDimming(mapRef.value)
-})
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes pulse-ring {
+    0% { transform: scale(0.5); opacity: 0.8; }
+    80%, 100% { transform: scale(2); opacity: 0; }
+  }
+
+  @keyframes pulse-pill {
+    0% { transform: scale(0.95); opacity: 0.7; }
+    50%, 100% { transform: scale(1); opacity: 1; }
+  }
+
+  .station-pulse-marker {
+    cursor: pointer;
+  }
+`;
+document.head.appendChild(style);
 
 </script>
 
@@ -496,33 +520,48 @@ watch(() => store.isochrones, () => {
 
     <div v-if="store.selectedStation" class="station-chip">
       <div class="station-chip-names">
-        <span class="station-chip-local">{{ store.selectedStation.nameLocal }}</span>
-        <span class="station-chip-en">{{ store.selectedStation.name }}</span>
+        <span class="station-chip-ru">{{ store.selectedStation.nameLocal }}</span>
+        <span v-if="store.selectedStation.name !== store.selectedStation.nameLocal" class="station-chip-en">
+          {{ store.selectedStation.name }}
+        </span>
       </div>
-      <button @click="store.selectStation(null)">✕</button>
+      <div class="station-chip-lines">
+        <span
+            v-for="badge in getStationLineBadges(store.selectedStation.id)"
+            :key="badge.id"
+            class="line-badge"
+            :style="{ backgroundColor: badge.color }"
+        >
+          {{ badge.name }}
+        </span>
+      </div>
+      <div v-if="store.isochronesLoading" class="chip-spinner" />
+      <button class="station-chip-close" @click="store.selectStation(null)" aria-label="Close">✕</button>
     </div>
 
     <div class="map-legend">
       <div class="map-legend-title">Зоны доступности</div>
-      <div v-for="(min, i) in ISOCHRONE_INTERVALS" :key="min" class="legend-row">
-        <span class="legend-swatch" :style="{ background: ISOCHRONE_COLORS[i], border: `1.5px solid ${ISOCHRONE_STROKES[i]}` }" />
+      <div v-for="(min, i) in [...ISOCHRONE_INTERVALS].reverse()" :key="min" class="legend-row">
+        <span class="legend-swatch" :style="{ background: ISOCHRONE_COLORS[ISOCHRONE_INTERVALS.length - 1 - i], border: `1.5px solid ${ISOCHRONE_STROKES[ISOCHRONE_INTERVALS.length - 1 - i]}` }" />
         <span>≤ {{ min }} min</span>
       </div>
     </div>
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .map-wrapper {
   flex: 1;
   height: 100%;
   position: relative;
   overflow: hidden;
+  background-color: #000000;
 }
 
 .map-container {
   width: 100%;
   height: 100%;
+  background-color: #000000;
 }
 
 .station-chip {
@@ -531,15 +570,123 @@ watch(() => store.isochrones, () => {
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;
-  background: var(--bg-sidebar);
-  border: 1px solid var(--border);
+  background: #1a1a2e;
+  border: 1px solid #FFD700;
   border-radius: 10px;
   padding: 8px 10px 8px 14px;
   display: flex;
   align-items: center;
   gap: 10px;
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
   animation: chip-enter 0.2s ease;
   white-space: nowrap;
+}
+
+.station-chip-lines {
+  display: flex;
+  gap: 3px;
+}
+
+.station-chip-names {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.station-chip-local {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  font-weight: normal;
+  color: #ffffff;
+}
+
+.station-chip-ru {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  font-weight: normal;
+  color: var(--text-primary);
+}
+
+.station-chip-en {
+  font-size: 12px;
+  color: #888888;
+}
+
+.station-chip-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  color: #888888;
+  padding: 10px 8px;
+  line-height: 1;
+  margin-left: -6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.station-chip-close:hover {
+  color: var(--text-muted);
+}
+
+.chip-spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  border-top-color: var(--text-muted);
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+.station-chip-close:hover {
+  color: #ffffff;
+}
+
+.map-legend {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  padding: 12px 16px;
+  border: 1px solid #333;
+  z-index: 10;
+}
+
+.map-legend-title {
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+
+.legend-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  color: #ffffff;
+  font-size: 11px;
+}
+
+.legend-swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+}
+
+@keyframes chip-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 </style>
