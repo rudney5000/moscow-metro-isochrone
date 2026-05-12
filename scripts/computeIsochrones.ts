@@ -42,7 +42,7 @@ type GeoFeature = { type: "Feature"; properties: Record<string, any>; geometry: 
 const GH_URL = process.env.GH_URL || "http://localhost:8989";
 const ROOT = join(import.meta.dirname, "..");
 const STATIONS_PATH = join(ROOT, "public", "data", "stations.geojson");
-const GTFS_ZIP = join(ROOT, "docker", "gtfs", "seoul-metro.gtfs.zip");
+const GTFS_ZIP = join(ROOT, "docker", "gtfs", "moscow-metro.gtfs.zip");
 const OUT_DIR = join(ROOT, "public", "data", "isochrones");
 
 const INTERVALS = [15, 30, 60]; // minutes
